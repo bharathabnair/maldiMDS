@@ -1,5 +1,5 @@
-Package: MALDIpqi
-Title: Estimate Parchment Glutamine Index from MALDI-TOF datasets
+Package: maldiMDS
+Title: Estimate MALDI Deamidation Score (MDS) from MALDI-TOF ZooMS datasets
 Version: 0.0.1
 Authors@R: 
     person("Ismael", "Rodriguez", , "ismael@palaeome.org", role = c("aut", "cre"),
@@ -8,10 +8,11 @@ Authors@R:
            comment = c(ORCID = "0000-0002-1302-4445"))
     person("Bharath", "Nair", , "bharath@palaeome.org", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1897-4132"))
-Description: It uses weighted least squares to deconvolute isotopic envelopes and calculate
-             glutamine deamidation level for a selection of peptides, from parchment sample triplicates.
+Description: It uses weighted least squares to deconvolute isotopic envelopes
+             and calculate glutamine deamidation level for a selection of peptides,
+             from MALDI-TOF ZooMS sample triplicates.
              A linear mixed effects model is then used to integrate the values into a
-             single Parchment Glutamine Index (PQI) per sample.
+             single MALDI Deamidation Score per sample.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -37,8 +38,8 @@ Imports:
     MALDIzooMS (>= 0.1.0),
     Spectra (>= 1.14.0),
     BiocParallel
-URL: https://github.com/ismaRP/MALDIpqi
-BugReports: https://github.com/ismaRP/MALDIpqi/issues
+URL: https://github.com/ismaRP/maldiMDS
+BugReports: https://github.com/ismaRP/maldiMDS/issues
 Depends: 
     R (>= 4.0)
 Remotes: 

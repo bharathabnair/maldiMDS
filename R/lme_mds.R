@@ -1,5 +1,5 @@
 
-#' Calculate PQI using linear mixed effect model from q2e estimates
+#' Calculate MDS using linear mixed effect model from q2e estimates
 #'
 #' @param q2e data.frame with q2e estimations per sample, replicate and peptide
 #' @param logq Whether q values are log-scaled before entering the LME model
@@ -9,18 +9,18 @@
 #'
 #' @return list contaning the following:
 #' \itemize{
-#'   \item \strong{sample}: data.frame with aggregated PQI estimates per sample
+#'   \item \strong{sample}: data.frame with aggregated MDS estimates per sample
 #'   \item \strong{pep}: data.frame of fitted and residuals per replicate and peptide
 #'   \item \strong{estimates}: list of model estimates
 #' }
 #' \code{sample} data.frame has the following columns:
 #' \itemize{
 #'   \item Sample: sample name
-#'   \item Prediction: sample random effects  obtained from custom formula that. It is the log(PQI)
-#'   \item sd: log(PQI) standard error
+#'   \item Prediction: sample random effects obtained from custom formula that. It is the log(MDS)
+#'   \item sd: log(MDS) standard error
 #'   \item RanefModel: sample random effects, as calculated by \code{\link[nlme]{ranef}}.
 #'         It should be the same as Prediction, up to numerical precision
-#'   \item PQI.Model, exponentials estimates. It is the PQI
+#'   \item MDS.Model, exponentials estimates. It is the MDS
 #'
 #' }
 #'
@@ -55,7 +55,7 @@
 #' @export
 #'
 #' @examples
-lme_pqi = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
+lme_mds = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
                    return_model=F){
 
   if (logq){
@@ -98,7 +98,7 @@ lme_pqi = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
   if (g != "free"){
     estimates_m$gamma = g
   }
-  prediction = predict_pqi(m, estimates_m, logq=logq)
+  prediction = predict_mds(m, estimates_m, logq=logq)
   ## mutate into the parent dataframe fitted values and residuals for plotting
   # q2e_m = q2e %>%
   # mutate(Fitted=fitted(m),
@@ -113,20 +113,20 @@ lme_pqi = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
   #     estimates_m))
 
   ## here I have added untransformed and transformed prediction from both the model and function
-  ## Prediction & PQI.PredictSample => from the function
-  ## RanefModel & PQI.Model => from the model
+  ## Prediction & MDS.PredictSample => from the function
+  ## RanefModel & MDS.Model => from the model
   # if (logq){
   #   q2e_m_pred = q2e_m_pred %>%
   #     mutate(RanefModel=ranef(m)[['Sample']][,1],
-  #            PQI.Model=exp(RanefModel),
-  #            PQI.PredictSample=exp(Prediction),
+  #            MDS.Model=exp(RanefModel),
+  #            MDS.PredictSample=exp(Prediction),
   #            Sample = as.character(Sample))
   # } else {
   #   q2e_m_pred = q2e_m_pred %>%
   #     mutate(RanefModel=ranef(m)[['Sample']][,1],
   #            Sample = as.character(Sample),
-  #            PQI.Model=RanefModel,
-  #            PQI.PredictSample=Prediction)
+  #            MDS.Model=RanefModel,
+  #            MDS.PredictSample=Prediction)
   # }
 
   if (!is.null(outdir)){
@@ -134,13 +134,13 @@ lme_pqi = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
       prediction$pep,
       file.path(
         outdir,
-        sprintf('PQI_pep_estimates_gamma%3.3f.csv', estimates_m$gamma))
+        sprintf('MDS_pep_estimates_gamma%3.3f.csv', estimates_m$gamma))
     )
     write_csv(
       prediction$sample,
       file.path(
         outdir,
-        sprintf('PQI_sample_estimates_gamma%3.3f.csv', estimates_m$gamma))
+        sprintf('MDS_sample_estimates_gamma%3.3f.csv', estimates_m$gamma))
     )
   }
 
@@ -154,7 +154,7 @@ lme_pqi = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
 #' Title
 #'
 #' @param model lme model object
-#' @param new_q2e New q2e data for which PQI is predicted using the trained model
+#' @param new_q2e New q2e data for which MDS is predicted using the trained model
 #' q is stored in a column called "resp"
 #' @param logq whether q is in log-scale in q2e or new_q2e
 #' @param estimates
@@ -167,18 +167,18 @@ lme_pqi = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
 #' @return
 #' @export
 #' @examples
-predict_pqi = function(model, estimates, new_q2e=NULL, logq=T){
+predict_mds = function(model, estimates, new_q2e=NULL, logq=T){
 
   if (is.null(new_q2e)) {
     q2e = model$data
-    pqi = q2e %>% group_by(sample) %>%
+    mds = q2e %>% group_by(sample) %>%
       summarise(predict_sample(
         sample, replicate, pept_name, reliability, resp, estimates)) %>%
-      mutate(PQI.Model = ranef(model)[['sample']][,1])
+      mutate(MDS.Model = ranef(model)[['sample']][,1])
     if (logq) {
-      pqi = pqi %>% mutate(
-        # PQI.PredictSample = exp(PQI.PredictSample),
-        PQI.Model = exp(PQI.Model)
+      mds = mds %>% mutate(
+        # MDS.PredictSample = exp(MDS.PredictSample),
+        MDS.Model = exp(MDS.Model)
       )
     }
     q2e_m = q2e %>% ungroup() %>%
@@ -187,14 +187,14 @@ predict_pqi = function(model, estimates, new_q2e=NULL, logq=T){
              Fitted0 = fitted(model, level = 0),
              Res0 = residuals(model, level = 0, type = "pearson")) %>%
       as_tibble()
-    return(list('pep' = q2e_m, 'sample' = pqi))
+    return(list('pep' = q2e_m, 'sample' = mds))
   } else {
     new_q2e = new_q2e %>%
       mutate(sample = as.factor(sample), replicate = as.factor(replicate),
              pept_name = as.factor(pept_name))
     # new_q2e = new_q2e %>% filter(residual>0) ## filter dataset to remove 0 reliabilities that resulted in Inf when taken the reciprocal
 
-    pqi = new_q2e %>% group_by(sample) %>%
+    mds = new_q2e %>% group_by(sample) %>%
       summarise(predict_sample(
         sample, replicate, pept_name, reliability, resp, estimates))
     q2e_m = new_q2e %>%
@@ -202,13 +202,13 @@ predict_pqi = function(model, estimates, new_q2e=NULL, logq=T){
         predicted_q = predict(model, new_q2e)
       )
     if (logq){
-      pqi = pqi %>% mutate(PQI.PredictSample = exp(PQI.PredictSample))
+      mds = mds %>% mutate(MDS.PredictSample = exp(MDS.PredictSample))
     }
     q2e_m = q2e_m %>%
       mutate(
         Pred = exp(predicted_q),
         Res = (resp - predicted_q)/sqrt(predicted_q))
-    return(list('sample' = pqi))
+    return(list('sample' = mds))
   }
 
 }
@@ -217,7 +217,7 @@ predict_pqi = function(model, estimates, new_q2e=NULL, logq=T){
 
 #' Quantile-Quantile plots of the linear mixed effect estimates per peptide
 #'
-#' @param pqi_m data.frame of model estimates per replicate and peptide
+#' @param mds_m data.frame of model estimates per replicate and peptide
 #' @param title Plot title
 #' @param peptides_user A dataframe with peptide information. It must contain at least 3 columns,
 #' peptide number or ID, name, and m/z. If NULL, default peptides are used.
@@ -232,7 +232,7 @@ predict_pqi = function(model, estimates, new_q2e=NULL, logq=T){
 #' @export
 #'
 #' @examples
-pept_qqplot = function(pqi_m, title="", peptides_user=NULL, label_idx=2,
+pept_qqplot = function(mds_m, title="", peptides_user=NULL, label_idx=2,
                        label_func = label_value){
 
   if (is.null(peptides_user)) peptides_user = peptides
@@ -240,7 +240,7 @@ pept_qqplot = function(pqi_m, title="", peptides_user=NULL, label_idx=2,
   pept_number = pull(peptides_user, 1)
   names(pept_labels) = pept_number
 
-  qq_plot = ggplot(pqi_m) +
+  qq_plot = ggplot(mds_m) +
     geom_qq(aes(sample=Res, color = pept_name)) +
     geom_qq_line(aes(sample = Res, color = pept_name)) +
     # facet_wrap(~Peptides, scales="free") +
@@ -260,7 +260,7 @@ pept_qqplot = function(pqi_m, title="", peptides_user=NULL, label_idx=2,
 
 #' Fitted versus residuals plot per peptide
 #'
-#' @param pqi_m data.frame of model estimates per replicate and peptide
+#' @param mds_m data.frame of model estimates per replicate and peptide
 #' @param title Plot title
 #' @param peptides_user A dataframe with peptide information. It must contain at least 3 columns,
 #' peptide number or ID, name, and m/z. If NULL, default peptides are used.
@@ -275,7 +275,7 @@ pept_qqplot = function(pqi_m, title="", peptides_user=NULL, label_idx=2,
 #' @export
 #'
 #' @examples
-fvsr = function(pqi_m, title="", peptides_user=NULL, label_idx=2,
+fvsr = function(mds_m, title="", peptides_user=NULL, label_idx=2,
                 label_func = label_value){
 
   if (is.null(peptides_user)) peptides_user = peptides
@@ -283,7 +283,7 @@ fvsr = function(pqi_m, title="", peptides_user=NULL, label_idx=2,
   pept_number = pull(peptides_user, 1)
   names(pept_labels) = pept_number
 
-  fvsr_plot = ggplot(pqi_m) +
+  fvsr_plot = ggplot(mds_m) +
     geom_point(aes(x = exp(Fitted), y = Res, color=pept_name),
                size = 2.5, alpha = 0.8) +
     # facet_wrap(~Peptides, scales="free") +

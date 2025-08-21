@@ -203,7 +203,7 @@ get_isodists = function(seqs, ndeam, nhyds, norm_func, long_format=F){
 #'     \item{gamma}{estimate for half power on Reliability}
 #'     \item{sigma2}{estimate for variance for on the different peptides. This should be a named vector.}
 #'}
-#' @return tibble with predicted sample PQI and standard deviation
+#' @return tibble with predicted sample MDS and standard deviation
 #' @export
 #' @importFrom tibble tibble
 #' @examples
@@ -239,7 +239,7 @@ predict_sample <- function(sample, replicate, pept_name, reliability, resp, pars
 
   # return
   # names(E_X) = names(var_X) <- NULL
-  # return(tibble(PQI.PredictSample = E_X, sd = sqrt(var_X)))
+  # return(tibble(MDS.PredictSample = E_X, sd = sqrt(var_X)))
   return(tibble(sd = sqrt(var_X)))
 }
 

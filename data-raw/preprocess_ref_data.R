@@ -1,4 +1,4 @@
-library(MALDIpqi)
+library(maldiMDS)
 library(MALDIutils)
 library(tidyverse)
 library(MALDIquant)

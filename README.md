@@ -1,24 +1,28 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# MALDIpqi
+# maldiMDS
 
-<!-- badges: start -->
-
+<!-- badges: start
 [![DOI](https://zenodo.org/badge/436219305.svg)](https://zenodo.org/badge/latestdoi/436219305)
-<!-- badges: end -->
+badges: end -->
 
-MALDIpqi calculates Parchment Glutamine Index from MALDI TOF ZooMS data.
-It is a sample level measure of the glutamine deamidation from a list of
-peptides.
+maldiMDS calculates MALDI Deamidation Score (MDS) from MALDI-TOF ZooMS
+data. It is a sample level measure of the glutamine deamidation,
+aggregated from the extent of deamidation of a list of peptides.
+
+It is the next iteration and based on the MALDIpqi package
+(<https://github.com/ismaRP/MALDIpqi.git>). maldiMDS is thought to be
+more general and flexible, not only applicable to parchment data, but
+also bone faunal assemblages. To reflect this, we are changing the name,
+but we’re still keeping MALDIpqi in a separate repository.
 
 For details in the data processing and mathematical method and models to
-estimate PQI, refer to our publication Nair et al. (2022)
-
-The method was initially developed to estimate parchment quality based
-on deamidation, following the ideas from Wilson et al. (2012). However,
-it can be applied in other tissues as in van Doorn et al. (2012) or
-Brown et al. (2021)
+estimate PQI, refer to our publication Nair et al. (2022). The method
+was initially developed to estimate parchment quality based on
+deamidation, following the ideas from Wilson et al. (2012). However, it
+can be applied in other tissues as in van Doorn et al. (2012) or Brown
+et al. (2021)
 
 ## Installation
 
@@ -28,7 +32,7 @@ You can install the released version of MALDIpqi from github with:
 install.packages('devtools')
 # We need to tell R to also look in Bioconductor for the packages Spectra and mzR
 setRepositories(ind=1:2)
-devtools::install_github("ismaRP/MALDIpqi")
+devtools::install_github("ismaRP/maldiMDS")
 ```
 
 ## Example
@@ -51,7 +55,7 @@ zooms_metadata = clean_metadata(zooms_metadata, data_folder)
 peptides = read_csv('peptides.csv'))
 
 # Preprocess spectra
-peaks = MALDIpqi::preprocess_spectra(
+peaks = maldiMDS::preprocess_spectra(
   indir = data_folder, metadata = zooms_metadata,
   mono_masses = peptides$mass,
   smooth_wma_hws = 4,
@@ -66,15 +70,14 @@ peaks = MALDIpqi::preprocess_spectra(
   min_isopeaks = 4,
   ncores = 6, chunk_size = 60
 )
-peaks = prepare_peaks(peaks, peptides, n_isopeaks = 5)
 
 # Calculate q2e for each sample, replicate and peptide
-q2e_vals = peaks %>% filter(n_peaks > 0) %>%
+q2e_vals = peaks %>%
   group_by(sample, replicate, pep_number) %>%
   summarise(wlm_q2e(norm_int, weight, deam_0, deam_1, deam_2))
 
 # Calculate PQI
-pqi_vals = lme_pqi(q2e_vals, logq = TRUE, g = 'free', return_model = TRUE)
+mds_vals = lme_mds(q2e_vals, logq = TRUE, g = 'free', return_model = TRUE)
 ```
 
 ## References
