@@ -67,20 +67,20 @@ lme_mds = function(q2e_vals, logq=TRUE, g=NULL, outdir=NULL,
   ## mixed effect model
   if (g == "free"){
     m = lme(
-      resp~0+pept_name,
+      resp~0+pep_number,
       random = ~1|sample/replicate,
       weights = varComb(
         varPower(-1/2, form = ~reliability),
-        varIdent(form = ~1|pept_name)),
+        varIdent(form = ~1|pep_number)),
       control = lmeControl(maxIter = 1000, msMaxIter = 1000, msMaxEval = 1000),
       data = q2e_vals)
   } else {
     m = lme(
-      resp~0+pept_name,
+      resp~0+pep_number,
       random = ~1|sample/replicate,
       weight = varComb(
         varFixed(~I(1/reliability)),
-        varIdent(form = ~1|pept_name)
+        varIdent(form = ~1|pep_number)
       ),
       control=lmeControl(maxIter = 1000, msMaxIter = 1000, msMaxEval = 1000),
       data=q2e_vals)
@@ -173,7 +173,7 @@ predict_mds = function(model, estimates, new_q2e=NULL, logq=T){
     q2e = model$data
     mds = q2e %>% group_by(sample) %>%
       summarise(predict_sample(
-        sample, replicate, pept_name, reliability, resp, estimates)) %>%
+        sample, replicate, pep_number, reliability, resp, estimates)) %>%
       mutate(MDS.Model = ranef(model)[['sample']][,1])
     if (logq) {
       mds = mds %>% mutate(
@@ -191,12 +191,12 @@ predict_mds = function(model, estimates, new_q2e=NULL, logq=T){
   } else {
     new_q2e = new_q2e %>%
       mutate(sample = as.factor(sample), replicate = as.factor(replicate),
-             pept_name = as.factor(pept_name))
+             pep_number = as.factor(pep_number))
     # new_q2e = new_q2e %>% filter(residual>0) ## filter dataset to remove 0 reliabilities that resulted in Inf when taken the reciprocal
 
     mds = new_q2e %>% group_by(sample) %>%
       summarise(predict_sample(
-        sample, replicate, pept_name, reliability, resp, estimates))
+        sample, replicate, pep_number, reliability, resp, estimates))
     q2e_m = new_q2e %>%
       mutate(
         predicted_q = predict(model, new_q2e)
@@ -241,12 +241,12 @@ pept_qqplot = function(mds_m, title="", peptides_user=NULL, label_idx=2,
   names(pept_labels) = pept_number
 
   qq_plot = ggplot(mds_m) +
-    geom_qq(aes(sample=Res, color = pept_name)) +
-    geom_qq_line(aes(sample = Res, color = pept_name)) +
+    geom_qq(aes(sample=Res, color = pep_number)) +
+    geom_qq_line(aes(sample = Res, color = pep_number)) +
     # facet_wrap(~Peptides, scales="free") +
     facet_wrap(
-      ~pept_name,
-      labeller = labeller(pept_name = as_labeller(pept_labels, label_func))) +
+      ~pep_number,
+      labeller = labeller(pep_number = as_labeller(pept_labels, label_func))) +
     theme_bw() +
     theme(legend.key.size=unit(1, "cm"),
           legend.text = element_text(size = 15),
@@ -284,12 +284,12 @@ fvsr = function(mds_m, title="", peptides_user=NULL, label_idx=2,
   names(pept_labels) = pept_number
 
   fvsr_plot = ggplot(mds_m) +
-    geom_point(aes(x = exp(Fitted), y = Res, color=pept_name),
+    geom_point(aes(x = exp(Fitted), y = Res, color=pep_number),
                size = 2.5, alpha = 0.8) +
     # facet_wrap(~Peptides, scales="free") +
     facet_wrap(
-      ~pept_name,
-      labeller = labeller(pept_name = as_labeller(pept_labels, label_func))) +
+      ~pep_number,
+      labeller = labeller(pep_number = as_labeller(pept_labels, label_func))) +
     ylab("standardized residuals") +
     xlab("predicted q peptide") +
     theme_bw() +

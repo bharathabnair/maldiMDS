@@ -300,7 +300,7 @@ prepare_peaks = function(peaks, n_isopeaks, peptides_user=NULL, int_column='inte
         rep(seq(n_peptides), each = n_isopeaks),
         times = n_spectra)),
       pep_number = as.factor(rep(
-        rep(peptides_user$pept_number, each = n_isopeaks),
+        rep(peptides_user$pep_number, each = n_isopeaks),
         times = n_spectra)),
       ndeam = rep(
         rep(str_count(peptides_user$sequence, 'Q'), each = n_isopeaks),
@@ -309,10 +309,10 @@ prepare_peaks = function(peaks, n_isopeaks, peptides_user=NULL, int_column='inte
 
 
 
-  if ('pept_name' %in% colnames(peptides_user)) {
+  if ('pep_name' %in% colnames(peptides_user)) {
     peaks = peaks %>%
-      mutate(pept_name = as.factor(rep(
-        rep(peptides_user$pept_name, each = n_isopeaks),
+      mutate(pep_name = as.factor(rep(
+        rep(peptides_user$pep_name, each = n_isopeaks),
         times = n_spectra)))
   }
 
@@ -437,7 +437,7 @@ plot_preprocessing = function(sp, peaks, peptides_user, n_isopeaks, norm_func=NU
   for (i in seq_along(peptides_user$mass)) {
     mono_mz = peptides_user$mass[i]
     s = (sp$mz > (mono_mz-3)) & (sp$mz < (mono_mz+6))
-    sp_mask[s] = peptides_user$pept_number[i]
+    sp_mask[s] = peptides_user$pep_number[i]
     p = (peaks$mz > (mono_mz-3)) & (peaks$mz < (mono_mz+6))
     peaks_mask[[i]] = p
   }
@@ -455,9 +455,9 @@ plot_preprocessing = function(sp, peaks, peptides_user, n_isopeaks, norm_func=NU
            norm_int_bl = baseline_SNIP/norm_func(intensity_SavitzkyGolay_bl_corr_SNIP, na.rm = TRUE),
            norm_int_bl_corr = intensity_SavitzkyGolay_bl_corr_SNIP/norm_func(intensity_SavitzkyGolay_bl_corr_SNIP, na.rm = TRUE)) %>%
     ungroup() %>%
-    mutate(pep_number = factor(pep_number, levels=peptides_user$pept_number[sort_idx]))
+    mutate(pep_number = factor(pep_number, levels=peptides_user$pep_number[sort_idx]))
   peaks = peaks %>%
-    mutate(pep_number = factor(pep_number, levels=peptides_user$pept_number[sort_idx]))
+    mutate(pep_number = factor(pep_number, levels=peptides_user$pep_number[sort_idx]))
   spp = ggplot(sp) +
     geom_vline(aes(xintercept=mz), data=peaks, color='grey', linetype='dashed',
                linewidth=0.5) +
