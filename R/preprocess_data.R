@@ -73,6 +73,7 @@
 #' @importFrom MALDIzooMS smooth baseline_correction peak_detection
 #' @importFrom MALDIzooMS peptide_pseudo_clusters peaks_local_bg
 #' @importFrom parallel detectCores
+#' @importFrom magrittr %>%
 #' @importFrom Spectra Spectra addProcessing peaksData
 #' @importFrom Spectra MsBackendMzR processingChunkSize
 #' @importFrom BiocParallel MulticoreParam SerialParam SnowParam register
@@ -263,7 +264,7 @@ normalize_intensity = function(intensity, norm_func) {
 #' @details The default peptides are the ones from Nair et al. (2022).
 #' The paper contains the details on the preprocessing procedure.
 #'
-#' @importFrom dplyr mutate rename
+#' @importFrom dplyr mutate rename select ungroup arrange
 #' @importFrom MALDIzooMS separate_sample_replicate
 #' @export
 #'
@@ -429,7 +430,8 @@ plot_n_peaks_per_peptide = function(peaks, n_isopeaks, min_isopeaks, marker_orde
 #' @export
 #'
 #' @examples
-plot_preprocessing = function(sp, peaks, peptides_user, n_isopeaks, norm_func=NULL) {
+plot_preprocessing = function(sp, peaks, peptides_user, n_isopeaks, norm_func=NULL,
+                              peptide_labeller) {
 
   if (is.null(norm_func)) norm_func = max
   peaks_mask = list()
@@ -456,29 +458,28 @@ plot_preprocessing = function(sp, peaks, peptides_user, n_isopeaks, norm_func=NU
            norm_int_bl_corr = intensity_SavitzkyGolay_bl_corr_SNIP/norm_func(intensity_SavitzkyGolay_bl_corr_SNIP, na.rm = TRUE)) %>%
     ungroup() %>%
     mutate(pep_number = factor(pep_number, levels=peptides_user$pep_number[sort_idx]))
+
   peaks = peaks %>%
     mutate(pep_number = factor(pep_number, levels=peptides_user$pep_number[sort_idx]))
   spp = ggplot(sp) +
-    geom_vline(aes(xintercept=mz), data=peaks, color='grey', linetype='dashed',
+    geom_vline(aes(xintercept=mz), data=peaks, color='grey40', linetype='dashed',
                linewidth=0.5) +
     # Raw int
-    geom_line(aes(x = mz, y = norm_int), color='grey70', alpha=1) +
+    geom_line(aes(x = mz, y = norm_int), color='grey70', alpha=0.8, linewidth=0.8) +
     # Smooth int
     geom_line(aes(x = mz, y = norm_int_wma),
-              color = 'grey20', alpha = 0.8) +
+              color = 'grey10', alpha = 0.8) +
     # Baseline
     geom_line(aes(x = mz, y = norm_int_bl),
-              color = 'darkolivegreen3', linetype = "dashed", linewidth=1) +
+              color = 'blue1', linetype = "dashed", linewidth=0.8) +
     geom_line(aes(x = mz, y = norm_int_bl_corr),
-              color = 'blue', linetype = "solid", alpha=0.6) +
+              color = 'brown2', linetype = "solid", alpha=1, linewidth=1) +
     # geom_line(aes(x=mz, y=b_d), color='blue') +
     # geom_text(aes(label=QCflag), x=+Inf, y=+Inf, vjust=1.3, hjust=1.2,
     #           data=sps_clusters[sele]@backend@spectraData) +
     geom_point(aes(x = mz, y = norm_int), shape = 19, size = 2,
                data = peaks) +
-    geom_line(aes(x=mz, y=theor_deam), size=1, color='#26828EFF',
-               data = peaks) +
-    facet_grid(spectra_name~pep_number, scales = 'free') +
+    facet_grid(spectra_name~pep_number, scales = 'free', labeller=peptide_labeller) +
     ylab('Normalized intensity') +
     xlab('') +
     theme_bw() +
@@ -487,5 +488,11 @@ plot_preprocessing = function(sp, peaks, peptides_user, n_isopeaks, norm_func=NU
           panel.grid.major = element_blank(),
           axis.text.y = element_blank(),
           axis.ticks.y = element_blank())
+  if ('theor_deam' %in% colnames(peaks)) {
+    spp = spp +
+      geom_line(aes(x=mz, y=theor_deam), size=1, color='#26828EFF',
+                          data = peaks)
+
+  }
   return(spp)
 }
