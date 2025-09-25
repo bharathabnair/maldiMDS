@@ -292,6 +292,7 @@ prepare_peaks = function(peaks, n_isopeaks, peptides_user=NULL, int_column='inte
 
   n_spectra = length(unique(peaks$spectra_name))
   n_peptides = nrow(peptides_user)
+  eps = 1e-5
   peaks = peaks %>%
     mutate(
       mass_pos = as.factor(rep(
@@ -306,7 +307,8 @@ prepare_peaks = function(peaks, n_isopeaks, peptides_user=NULL, int_column='inte
       ndeam = rep(
         rep(str_count(peptides_user$sequence, 'Q'), each = n_isopeaks),
         times = n_spectra),
-      weight = SNR/abs(delta_mass))
+      weight = SNR/sqrt(pmax(abs(delta_mass), eps))
+      )
 
 
 

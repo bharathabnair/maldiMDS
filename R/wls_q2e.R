@@ -136,7 +136,7 @@ wlm_q2e = function(norm_int = NULL, weight = NULL,
     data$weight = data$weight / sum(data$weight, na.rm = TRUE)
     if (all(is.na(data$norm_int))) allna = TRUE else allna = FALSE
   } else {
-    weight = weight /sum(weight, na.rm = TRUE)
+    weight = weight / sum(weight, na.rm = TRUE)
     if (all(is.na(norm_int))) allna = TRUE else allna = FALSE
   }
   if (allna) {
